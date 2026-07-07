@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flash — Instant Send</title>
+<style>
+  :root {
+    --ink: #0B0E14;
+    --panel: #12161F;
+    --panel-2: #191F2B;
+    --mint: #00E5A0;
+    --mint-dim: rgba(0,229,160,0.15);
+    --amber: #FFB454;
+    --text: #EDEFF3;
+    --text-dim: #7C8494;
+    --line: #232A38;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--ink);
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(0,229,160,0.06), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(255,180,84,0.05), transparent 40%);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 60px;
+  }
+
+  .brand {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .brand .mark {
+    font-family: 'Georgia', serif;
+    font-size: 15px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--mint);
+    font-weight: 600;
+  }
+  .brand .tag {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .stage {
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    width: 100%;
+    max-width: 720px;
+  }
+
+  .phone {
+    width: 220px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    padding: 20px 18px 24px;
+    position: relative;
+    box-shadow: 0 20px 60px -20px rgba(0,0,0,0.6);
+    flex-shrink: 0;
+  }
+
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 44px;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--line);
+  }
+
+  .phone-label {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin: 18px 0 18px;
+  }
+
+  .balance-block {
+    text-align: center;
+    margin-bottom: 22px;
+  }
+  .balance-currency {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .balance-amount {
+    font-family: 'Courier New', monospace;
+    font-size: 34px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    transition: color 0.3s ease;
+  }
+  .balance-amount.flash {
+    color: var(--mint);
+  }
+
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-dim);
+    background: var(--panel-2);
+    padding: 5px 10px;
+    border-radius: 20px;
+    margin: 0 auto;
+  }
+  .status-chip .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--mint);
+  }
+  .status-row { display:flex; justify-content:center; margin-bottom: 20px; min-height: 26px; }
+
+  .amount-input-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .currency-prefix {
+    font-family: 'Courier New', monospace;
+    font-size: 22px;
+    color: var(--text-dim);
+  }
+  .amount-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    color: var(--text);
+    font-family: 'Courier New', monospace;
+    font-size: 22px;
+    width: 100px;
+    text-align: center;
+    padding-bottom: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .amount-input:focus { outline: none; border-color: var(--mint); }
+
+  .send-btn {
+    width: 100%;
+    background: var(--mint);
+    color: #06231A;
+    border: none;
+    padding: 13px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: transform 0.08s ease, box-shadow 0.2s ease;
+    box-shadow: 0 8px 20px -8px rgba(0,229,160,0.5);
+  }
+  .send-btn:active { transform: scale(0.97); }
+  .send-btn:disabled {
+    background: var(--panel-2);
+    color: var(--text-dim);
+    cursor: default;
+    box-shadow: none;
+  }
+
+  .receiver-name {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 14px;
+  }
+
+  /* connector */
+  .link {
+    width: 160px;
+    height: 2px;
+    position: relative;
+    background: var(--line);
+    flex-shrink: 0;
+    overflow: visible;
+  }
+  .link .pulse-dot {
+    position: absolute;
+    top: 50%;
+    left: -6px;
+    width: 12px;
+    height: 12px;
+    margin-top: -6px;
+    border-radius: 50%;
+    background: var(--mint);
+    box-shadow: 0 0 16px 4px rgba(0,229,160,0.7);
+    opacity: 0;
+  }
+  .link .pulse-dot.go {
+    animation: travel 0.55s cubic-bezier(0.4,0,0.2,1) forwards;
+  }
+  @keyframes travel {
+    0%   { left: -6px; opacity: 1; }
+    100% { left: calc(100% - 6px); opacity: 1; }
+  }
+  .link-badge {
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .ledger {
+    margin-top: 40px;
+    width: 100%;
+    max-width: 480px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px 18px;
+  }
+  .ledger h3 {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin: 0 0 10px;
+    font-weight: 600;
+  }
+  .ledger-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    padding: 6px 0;
+    border-top: 1px solid var(--line);
+  }
+  .ledger-row:first-of-type { border-top: none; }
+  .ledger-row .t { color: var(--text-dim); }
+  .ledger-row .a { color: var(--mint); }
+  .ledger-empty { color: var(--text-dim); font-size: 13px; padding: 6px 0; }
+
+  .disclaimer {
+    margin-top: 28px;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+    max-width: 420px;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 560px) {
+    .stage { flex-direction: column; gap: 24px; }
+    .link { width: 2px; height: 60px; }
+    .link .pulse-dot { left: 50%; top: -6px; margin-left: -6px; }
+    .link .pulse-dot.go { animation: travelV 0.55s cubic-bezier(0.4,0,0.2,1) forwards; }
+    @keyframes travelV {
+      0%   { top: -6px; opacity: 1; }
+      100% { top: calc(100% - 6px); opacity: 1; }
+    }
+    .link-badge { top: 50%; left: 26px; transform: translateY(-50%); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .link .pulse-dot.go { animation: none; opacity: 1; left: calc(100% - 6px); }
+    .balance-amount.flash { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="brand">
+    <div class="mark">Flash</div>
+    <div class="tag">tap to send, instantly received</div>
+  </div>
+
+  <div class="stage">
+    <!-- SENDER -->
+    <div class="phone">
+      <div class="phone-label">Kwame's Phone</div>
+      <div class="status-row">
+        <div class="status-chip" id="senderStatus"><span class="dot"></span><span>Connected</span></div>
+      </div>
+      <div class="balance-block">
+        <div class="balance-currency">GH¢</div>
+        <div class="balance-amount" id="senderBalance">250.00</div>
+      </div>
+      <div class="amount-input-wrap">
+        <span class="currency-prefix">GH¢</span>
+        <input type="number" class="amount-input" id="amountInput" value="20" min="1" max="250" step="1">
+      </div>
+      <button class="send-btn" id="sendBtn">Send now</button>
+      <div class="receiver-name">to Ama</div>
+    </div>
+
+    <!-- LINK -->
+    <div class="link">
+      <div class="link-badge" id="linkBadge">linked</div>
+      <div class="pulse-dot" id="pulseDot"></div>
+    </div>
+
+    <!-- RECEIVER -->
+    <div class="phone">
+      <div class="phone-label">Ama's Phone</div>
+      <div class="status-row">
+        <div class="status-chip" id="receiverStatus"><span class="dot"></span><span>Connected</span></div>
+      </div>
+      <div class="balance-block">
+        <div class="balance-currency">GH¢</div>
+        <div class="balance-amount" id="receiverBalance">80.00</div>
+      </div>
+      <div style="height:48px; display:flex; align-items:center; justify-content:center;">
+        <span style="font-size:12px; color:var(--text-dim);" id="receiverMsg">Waiting for payment</span>
+      </div>
+      <div style="height:41px;"></div>
+      <div class="receiver-name">from Kwame</div>
+    </div>
+  </div>
+
+  <div class="ledger">
+    <h3>Activity</h3>
+    <div id="ledgerList">
+      <div class="ledger-empty">No transfers yet — hit Send now to try it</div>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    This is a simulated demo. No real money, bank, or card is connected — it's a working prototype of the instant tap-to-send experience.
+  </div>
+
+<script>
+  let senderBal = 250.00;
+  let receiverBal = 80.00;
+  let txCount = 0;
+
+  const senderBalEl = document.getElementById('senderBalance');
+  const receiverBalEl = document.getElementById('receiverBalance');
+  const amountInput = document.getElementById('amountInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const pulseDot = document.getElementById('pulseDot');
+  const receiverMsg = document.getElementById('receiverMsg');
+  const ledgerList = document.getElementById('ledgerList');
+  const linkBadge = document.getElementById('linkBadge');
+
+  function fmt(n) {
+    return n.toFixed(2);
+  }
+
+  function addLedgerRow(amount) {
+    txCount++;
+    if (txCount === 1) ledgerList.innerHTML = '';
+    const row = document.createElement('div');
+    row.className = 'ledger-row';
+    const now = new Date();
+    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    row.innerHTML = `<span class="t">${time} · Kwame → Ama</span><span class="a">GH¢${fmt(amount)}</span>`;
+    ledgerList.prepend(row);
+  }
+
+  sendBtn.addEventListener('click', () => {
+    const amount = parseFloat(amountInput.value);
+    if (!amount || amount <= 0) return;
+    if (amount > senderBal) {
+      receiverMsg.textContent = 'Insufficient balance';
+      receiverMsg.style.color = '#FF6B6B';
+      setTimeout(() => { receiverMsg.textContent = 'Waiting for payment'; receiverMsg.style.color = ''; }, 1800);
+      return;
+    }
+
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending…';
+    linkBadge.textContent = 'sending';
+
+    // trigger travel animation
+    pulseDot.classList.remove('go');
+    void pulseDot.offsetWidth; // reflow to restart animation
+    pulseDot.classList.add('go');
+
+    setTimeout(() => {
+      senderBal -= amount;
+      receiverBal += amount;
+
+      senderBalEl.textContent = fmt(senderBal);
+      receiverBalEl.textContent = fmt(receiverBal);
+
+      senderBalEl.classList.add('flash');
+      receiverBalEl.classList.add('flash');
+      setTimeout(() => {
+        senderBalEl.classList.remove('flash');
+        receiverBalEl.classList.remove('flash');
+      }, 900);
+
+      receiverMsg.innerHTML = '✓ Received GH¢' + fmt(amount);
+      receiverMsg.style.color = 'var(--mint)';
+
+      addLedgerRow(amount);
+
+      linkBadge.textContent = 'linked';
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Send now';
+
+      setTimeout(() => {
+        receiverMsg.textContent = 'Waiting for payment';
+        receiverMsg.style.color = '';
+      }, 2500);
+    }, 550);
+  });
+</script>
+
+</body>
+</html>
