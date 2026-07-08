@@ -10,421 +10,423 @@
     --panel: #12161F;
     --panel-2: #191F2B;
     --mint: #00E5A0;
-    --mint-dim: rgba(0,229,160,0.15);
-    --amber: #FFB454;
     --text: #EDEFF3;
     --text-dim: #7C8494;
     --line: #232A38;
+    --red: #FF6B6B;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; min-height: 100vh; background: var(--ink);
+    background-image: radial-gradient(circle at 20% 10%, rgba(0,229,160,0.06), transparent 40%),
+                       radial-gradient(circle at 80% 90%, rgba(255,180,84,0.05), transparent 40%);
+    color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  #app { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 28px 18px 50px; }
+
+  .brand { text-align: center; margin-bottom: 30px; }
+  .brand .mark { font-family: Georgia, serif; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: var(--mint); font-weight: 600; }
+  .brand .tag { font-size: 12.5px; color: var(--text-dim); margin-top: 4px; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 24px; width: 100%; max-width: 380px; }
+
+  input[type=text], input[type=number], input[type=tel] {
+    width: 100%; background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+    font-size: 16px; padding: 13px 14px; border-radius: 12px; margin-top: 8px; margin-bottom: 4px;
+  }
+  input:focus { outline: none; border-color: var(--mint); }
+  label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .06em; }
+
+  button.primary {
+    width: 100%; background: var(--mint); color: #06231A; border: none; padding: 14px;
+    border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 14px;
+    box-shadow: 0 8px 20px -8px rgba(0,229,160,.5);
+  }
+  button.primary:disabled { background: var(--panel-2); color: var(--text-dim); box-shadow: none; }
+  button.ghost {
+    width: 100%; background: transparent; color: var(--text-dim); border: 1px solid var(--line);
+    padding: 12px; border-radius: 12px; font-size: 14px; cursor: pointer; margin-top: 10px;
   }
 
-  * { box-sizing: border-box; }
+  .balance-hero { text-align: center; margin: 6px 0 26px; }
+  .balance-hero .lbl { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .08em; }
+  .balance-hero .amt { font-family: 'Courier New', monospace; font-size: 40px; font-weight: 700; transition: color .3s; }
+  .balance-hero .amt.flash { color: var(--mint); }
 
-  body {
-    margin: 0;
-    min-height: 100vh;
-    background: var(--ink);
-    background-image:
-      radial-gradient(circle at 20% 10%, rgba(0,229,160,0.06), transparent 40%),
-      radial-gradient(circle at 80% 90%, rgba(255,180,84,0.05), transparent 40%);
-    color: var(--text);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 32px 16px 60px;
-  }
+  .me-name { text-align:center; font-size: 13px; color: var(--text-dim); margin-bottom: 18px; }
 
-  .brand {
-    text-align: center;
-    margin-bottom: 8px;
-  }
-  .brand .mark {
-    font-family: 'Georgia', serif;
-    font-size: 15px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--mint);
-    font-weight: 600;
-  }
-  .brand .tag {
-    font-size: 13px;
-    color: var(--text-dim);
-    margin-top: 4px;
-  }
+  .section-lbl { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .08em; margin: 20px 0 10px; text-align:left; width:100%; max-width:380px; }
 
-  .stage {
-    margin-top: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-    width: 100%;
-    max-width: 720px;
+  .device-list { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 8px; }
+  .device-card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: border-color .15s;
   }
+  .device-card:active { border-color: var(--mint); }
+  .device-card .dname { font-weight: 600; font-size: 14.5px; }
+  .device-card .dsub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .pulse-icon { width: 8px; height: 8px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 8px 2px rgba(0,229,160,.6); }
 
-  .phone {
-    width: 220px;
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 28px;
-    padding: 20px 18px 24px;
-    position: relative;
-    box-shadow: 0 20px 60px -20px rgba(0,0,0,0.6);
-    flex-shrink: 0;
-  }
+  .empty-note { color: var(--text-dim); font-size: 13px; text-align: center; padding: 20px 10px; max-width: 380px; line-height: 1.5; }
 
-  .phone::before {
-    content: '';
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 44px;
-    height: 5px;
-    border-radius: 3px;
-    background: var(--line);
+  .toast {
+    position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+    background: var(--panel); border: 1px solid var(--mint); color: var(--mint);
+    padding: 12px 20px; border-radius: 30px; font-size: 13.5px; font-weight: 600;
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,.6); z-index: 50; opacity: 0; pointer-events: none;
+    transition: opacity .3s, transform .3s;
   }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(6px); }
 
-  .phone-label {
-    text-align: center;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin: 18px 0 18px;
-  }
+  .connecting { text-align: center; padding: 30px 10px; }
+  .spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--mint);
+    margin: 0 auto 16px; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-  .balance-block {
-    text-align: center;
-    margin-bottom: 22px;
-  }
-  .balance-currency {
-    font-size: 12px;
-    color: var(--text-dim);
-    font-variant-numeric: tabular-nums;
-  }
-  .balance-amount {
-    font-family: 'Courier New', monospace;
-    font-size: 34px;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-    transition: color 0.3s ease;
-  }
-  .balance-amount.flash {
-    color: var(--mint);
-  }
+  .pin-dots { display: flex; justify-content: center; gap: 12px; margin: 18px 0; }
+  .pin-dots .d { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); }
+  .pin-dots .d.on { background: var(--mint); border-color: var(--mint); }
 
-  .status-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: var(--text-dim);
-    background: var(--panel-2);
-    padding: 5px 10px;
-    border-radius: 20px;
-    margin: 0 auto;
-  }
-  .status-chip .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--mint);
-  }
-  .status-row { display:flex; justify-content:center; margin-bottom: 20px; min-height: 26px; }
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 260px; margin: 0 auto; }
+  .keypad button { background: var(--panel-2); border: 1px solid var(--line); color: var(--text); font-size: 20px;
+    padding: 16px 0; border-radius: 14px; cursor: pointer; }
+  .keypad button:active { border-color: var(--mint); }
+  .keypad button.del { font-size: 14px; color: var(--text-dim); }
 
-  .amount-input-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin-bottom: 20px;
-  }
-  .currency-prefix {
-    font-family: 'Courier New', monospace;
-    font-size: 22px;
-    color: var(--text-dim);
-  }
-  .amount-input {
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--line);
-    color: var(--text);
-    font-family: 'Courier New', monospace;
-    font-size: 22px;
-    width: 100px;
-    text-align: center;
-    padding-bottom: 4px;
-    font-variant-numeric: tabular-nums;
-  }
-  .amount-input:focus { outline: none; border-color: var(--mint); }
+  .success { text-align: center; padding: 20px 10px; }
+  .check { width: 56px; height: 56px; border-radius: 50%; background: rgba(0,229,160,.15);
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 28px; color: var(--mint); }
 
-  .send-btn {
-    width: 100%;
-    background: var(--mint);
-    color: #06231A;
-    border: none;
-    padding: 13px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    cursor: pointer;
-    transition: transform 0.08s ease, box-shadow 0.2s ease;
-    box-shadow: 0 8px 20px -8px rgba(0,229,160,0.5);
-  }
-  .send-btn:active { transform: scale(0.97); }
-  .send-btn:disabled {
-    background: var(--panel-2);
-    color: var(--text-dim);
-    cursor: default;
-    box-shadow: none;
-  }
+  .activity { width: 100%; max-width: 380px; margin-top: 24px; }
+  .activity h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-dim); margin-bottom: 8px; }
+  .arow { display: flex; justify-content: space-between; font-family: 'Courier New', monospace; font-size: 12.5px;
+    padding: 7px 0; border-top: 1px solid var(--line); }
+  .arow:first-child { border-top: none; }
+  .arow .t { color: var(--text-dim); }
+  .arow .a.in { color: var(--mint); }
+  .arow .a.out { color: var(--text-dim); }
 
-  .receiver-name {
-    text-align: center;
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-top: 14px;
-  }
-
-  /* connector */
-  .link {
-    width: 160px;
-    height: 2px;
-    position: relative;
-    background: var(--line);
-    flex-shrink: 0;
-    overflow: visible;
-  }
-  .link .pulse-dot {
-    position: absolute;
-    top: 50%;
-    left: -6px;
-    width: 12px;
-    height: 12px;
-    margin-top: -6px;
-    border-radius: 50%;
-    background: var(--mint);
-    box-shadow: 0 0 16px 4px rgba(0,229,160,0.7);
-    opacity: 0;
-  }
-  .link .pulse-dot.go {
-    animation: travel 0.55s cubic-bezier(0.4,0,0.2,1) forwards;
-  }
-  @keyframes travel {
-    0%   { left: -6px; opacity: 1; }
-    100% { left: calc(100% - 6px); opacity: 1; }
-  }
-  .link-badge {
-    position: absolute;
-    top: -22px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    white-space: nowrap;
-  }
-
-  .ledger {
-    margin-top: 40px;
-    width: 100%;
-    max-width: 480px;
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 16px 18px;
-  }
-  .ledger h3 {
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin: 0 0 10px;
-    font-weight: 600;
-  }
-  .ledger-row {
-    display: flex;
-    justify-content: space-between;
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-    padding: 6px 0;
-    border-top: 1px solid var(--line);
-  }
-  .ledger-row:first-of-type { border-top: none; }
-  .ledger-row .t { color: var(--text-dim); }
-  .ledger-row .a { color: var(--mint); }
-  .ledger-empty { color: var(--text-dim); font-size: 13px; padding: 6px 0; }
-
-  .disclaimer {
-    margin-top: 28px;
-    font-size: 11px;
-    color: var(--text-dim);
-    text-align: center;
-    max-width: 420px;
-    line-height: 1.5;
-  }
-
-  @media (max-width: 560px) {
-    .stage { flex-direction: column; gap: 24px; }
-    .link { width: 2px; height: 60px; }
-    .link .pulse-dot { left: 50%; top: -6px; margin-left: -6px; }
-    .link .pulse-dot.go { animation: travelV 0.55s cubic-bezier(0.4,0,0.2,1) forwards; }
-    @keyframes travelV {
-      0%   { top: -6px; opacity: 1; }
-      100% { top: calc(100% - 6px); opacity: 1; }
-    }
-    .link-badge { top: 50%; left: 26px; transform: translateY(-50%); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .link .pulse-dot.go { animation: none; opacity: 1; left: calc(100% - 6px); }
-    .balance-amount.flash { transition: none; }
-  }
+  .disclaimer { margin-top: 26px; font-size: 11px; color: var(--text-dim); text-align: center; max-width: 380px; line-height: 1.5; }
 </style>
 </head>
 <body>
-
-  <div class="brand">
-    <div class="mark">Flash</div>
-    <div class="tag">tap to send, instantly received</div>
-  </div>
-
-  <div class="stage">
-    <!-- SENDER -->
-    <div class="phone">
-      <div class="phone-label">Kwame's Phone</div>
-      <div class="status-row">
-        <div class="status-chip" id="senderStatus"><span class="dot"></span><span>Connected</span></div>
-      </div>
-      <div class="balance-block">
-        <div class="balance-currency">GH¢</div>
-        <div class="balance-amount" id="senderBalance">250.00</div>
-      </div>
-      <div class="amount-input-wrap">
-        <span class="currency-prefix">GH¢</span>
-        <input type="number" class="amount-input" id="amountInput" value="20" min="1" max="250" step="1">
-      </div>
-      <button class="send-btn" id="sendBtn">Send now</button>
-      <div class="receiver-name">to Ama</div>
-    </div>
-
-    <!-- LINK -->
-    <div class="link">
-      <div class="link-badge" id="linkBadge">linked</div>
-      <div class="pulse-dot" id="pulseDot"></div>
-    </div>
-
-    <!-- RECEIVER -->
-    <div class="phone">
-      <div class="phone-label">Ama's Phone</div>
-      <div class="status-row">
-        <div class="status-chip" id="receiverStatus"><span class="dot"></span><span>Connected</span></div>
-      </div>
-      <div class="balance-block">
-        <div class="balance-currency">GH¢</div>
-        <div class="balance-amount" id="receiverBalance">80.00</div>
-      </div>
-      <div style="height:48px; display:flex; align-items:center; justify-content:center;">
-        <span style="font-size:12px; color:var(--text-dim);" id="receiverMsg">Waiting for payment</span>
-      </div>
-      <div style="height:41px;"></div>
-      <div class="receiver-name">from Kwame</div>
-    </div>
-  </div>
-
-  <div class="ledger">
-    <h3>Activity</h3>
-    <div id="ledgerList">
-      <div class="ledger-empty">No transfers yet — hit Send now to try it</div>
-    </div>
-  </div>
-
-  <div class="disclaimer">
-    This is a simulated demo. No real money, bank, or card is connected — it's a working prototype of the instant tap-to-send experience.
-  </div>
+<div id="app"></div>
 
 <script>
-  let senderBal = 250.00;
-  let receiverBal = 80.00;
-  let txCount = 0;
+(function(){
+  const app = document.getElementById('app');
+  const STORAGE_KEY = 'flash-airdrop-state-v1';
+  const STALE_MS = 15000;
+  const HEARTBEAT_MS = 2200;
 
-  const senderBalEl = document.getElementById('senderBalance');
-  const receiverBalEl = document.getElementById('receiverBalance');
-  const amountInput = document.getElementById('amountInput');
-  const sendBtn = document.getElementById('sendBtn');
-  const pulseDot = document.getElementById('pulseDot');
-  const receiverMsg = document.getElementById('receiverMsg');
-  const ledgerList = document.getElementById('ledgerList');
-  const linkBadge = document.getElementById('linkBadge');
+  let myId = null;
+  let myName = '';
+  let myBalance = 100;
+  let seenTx = new Set();
+  let view = 'name-entry';
+  let targetId = null;
+  let pendingAmount = 0;
+  let pin = '';
+  let heartbeatTimer = null;
+  let toastTimer = null;
+  let nearby = [];
+  let myActivity = [];
 
-  function fmt(n) {
-    return n.toFixed(2);
+  function uid() {
+    return 'd' + Math.random().toString(36).slice(2, 10);
   }
 
-  function addLedgerRow(amount) {
-    txCount++;
-    if (txCount === 1) ledgerList.innerHTML = '';
-    const row = document.createElement('div');
-    row.className = 'ledger-row';
-    const now = new Date();
-    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    row.innerHTML = `<span class="t">${time} · Kwame → Ama</span><span class="a">GH¢${fmt(amount)}</span>`;
-    ledgerList.prepend(row);
+  async function safeGet(key) {
+    try {
+      const r = await window.storage.get(key, true);
+      return r ? JSON.parse(r.value) : null;
+    } catch (e) { return null; }
+  }
+  async function safeSet(key, value) {
+    try { await window.storage.set(key, JSON.stringify(value), true); return true; }
+    catch (e) { return false; }
   }
 
-  sendBtn.addEventListener('click', () => {
-    const amount = parseFloat(amountInput.value);
-    if (!amount || amount <= 0) return;
-    if (amount > senderBal) {
-      receiverMsg.textContent = 'Insufficient balance';
-      receiverMsg.style.color = '#FF6B6B';
-      setTimeout(() => { receiverMsg.textContent = 'Waiting for payment'; receiverMsg.style.color = ''; }, 1800);
+  function showToast(msg) {
+    let t = document.getElementById('toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'toast'; t.className = 'toast';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  async function heartbeat() {
+    let state = await safeGet(STORAGE_KEY);
+    if (!state) state = { devices: {}, tx: [] };
+    if (!state.devices) state.devices = {};
+    if (!state.tx) state.tx = [];
+
+    if (state.devices[myId] && typeof state.devices[myId].balance === 'number') {
+      myBalance = state.devices[myId].balance;
+    }
+
+    const incoming = state.tx.filter(t => t.to === myId && !seenTx.has(t.id));
+    incoming.forEach(t => {
+      seenTx.add(t.id);
+      showToast('✓ Received GH¢' + t.amount.toFixed(2) + ' from ' + t.fromName);
+      myActivity.unshift({ dir: 'in', name: t.fromName, amount: t.amount, time: t.time });
+      flashBalance();
+    });
+
+    const now = Date.now();
+    Object.keys(state.devices).forEach(id => {
+      if (now - state.devices[id].lastSeen > STALE_MS) delete state.devices[id];
+    });
+
+    state.devices[myId] = { name: myName, balance: myBalance, lastSeen: now };
+    await safeSet(STORAGE_KEY, state);
+
+    nearby = Object.entries(state.devices)
+      .filter(([id]) => id !== myId)
+      .map(([id, d]) => ({ id, name: d.name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    if (view === 'home') render();
+  }
+
+  function startHeartbeat() {
+    heartbeat();
+    heartbeatTimer = setInterval(heartbeat, HEARTBEAT_MS);
+  }
+
+  function flashBalance() {
+    const el = document.getElementById('balAmt');
+    if (!el) return;
+    el.classList.add('flash');
+    setTimeout(() => el.classList.remove('flash'), 900);
+  }
+
+  async function sendMoney() {
+    view = 'connecting';
+    render();
+    await new Promise(r => setTimeout(r, 700));
+    view = 'pin';
+    pin = '';
+    render();
+  }
+
+  async function confirmPin() {
+    view = 'processing';
+    render();
+
+    let state = await safeGet(STORAGE_KEY);
+    if (!state) state = { devices: {}, tx: [] };
+    const other = state.devices[targetId];
+    if (!other) {
+      showToast('That device went offline — try again');
+      view = 'home';
+      render();
+      return;
+    }
+    if (pendingAmount > myBalance) {
+      showToast('Insufficient balance');
+      view = 'home';
+      render();
       return;
     }
 
-    sendBtn.disabled = true;
-    sendBtn.textContent = 'Sending…';
-    linkBadge.textContent = 'sending';
+    myBalance -= pendingAmount;
+    other.balance = (other.balance || 0) + pendingAmount;
+    state.devices[myId] = { name: myName, balance: myBalance, lastSeen: Date.now() };
+    state.devices[targetId] = other;
 
-    // trigger travel animation
-    pulseDot.classList.remove('go');
-    void pulseDot.offsetWidth; // reflow to restart animation
-    pulseDot.classList.add('go');
+    const txId = uid();
+    state.tx = [{ id: txId, from: myId, fromName: myName, to: targetId, toName: other.name, amount: pendingAmount, time: Date.now() }, ...(state.tx || [])].slice(0, 60);
+    seenTx.add(txId);
 
-    setTimeout(() => {
-      senderBal -= amount;
-      receiverBal += amount;
+    await safeSet(STORAGE_KEY, state);
 
-      senderBalEl.textContent = fmt(senderBal);
-      receiverBalEl.textContent = fmt(receiverBal);
+    myActivity.unshift({ dir: 'out', name: other.name, amount: pendingAmount, time: Date.now() });
+    view = 'success';
+    render();
+  }
 
-      senderBalEl.classList.add('flash');
-      receiverBalEl.classList.add('flash');
-      setTimeout(() => {
-        senderBalEl.classList.remove('flash');
-        receiverBalEl.classList.remove('flash');
-      }, 900);
+  function renderNameEntry() {
+    app.innerHTML = `
+      <div class="brand">
+        <div class="mark">Flash</div>
+        <div class="tag">tap to send, instantly received</div>
+      </div>
+      <div class="card">
+        <label>Your name</label>
+        <input type="text" id="nameInput" placeholder="e.g. Kwame" maxlength="20" autofocus>
+        <button class="primary" id="joinBtn">Join nearby</button>
+      </div>
+      <div class="disclaimer">
+        Open this same link on another phone at the same time — you'll show up in each other's nearby list, just like AirDrop. No real money moves; this is a simulated demo.
+      </div>
+    `;
+    const input = document.getElementById('nameInput');
+    const btn = document.getElementById('joinBtn');
+    const go = () => {
+      const val = input.value.trim();
+      if (!val) { input.focus(); return; }
+      myName = val;
+      myId = uid();
+      view = 'home';
+      render();
+      startHeartbeat();
+    };
+    btn.addEventListener('click', go);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  }
 
-      receiverMsg.innerHTML = '✓ Received GH¢' + fmt(amount);
-      receiverMsg.style.color = 'var(--mint)';
+  function renderHome() {
+    const list = nearby.length
+      ? nearby.map(d => `
+          <div class="device-card" data-id="${d.id}">
+            <div>
+              <div class="dname">${escapeHtml(d.name)}</div>
+              <div class="dsub">nearby · tap to send</div>
+            </div>
+            <div class="pulse-icon"></div>
+          </div>
+        `).join('')
+      : `<div class="empty-note">Searching for nearby devices…<br>Open this same link on another phone to see it appear here.</div>`;
 
-      addLedgerRow(amount);
+    const activityHtml = myActivity.length
+      ? myActivity.slice(0, 8).map(a => `
+          <div class="arow">
+            <span class="t">${a.dir === 'in' ? a.name + ' → you' : 'you → ' + a.name}</span>
+            <span class="a ${a.dir}">${a.dir === 'in' ? '+' : '−'}GH¢${a.amount.toFixed(2)}</span>
+          </div>
+        `).join('')
+      : `<div class="empty-note" style="padding:10px 0;">No transfers yet</div>`;
 
-      linkBadge.textContent = 'linked';
-      sendBtn.disabled = false;
-      sendBtn.textContent = 'Send now';
+    app.innerHTML = `
+      <div class="brand">
+        <div class="mark">Flash</div>
+        <div class="tag">tap to send, instantly received</div>
+      </div>
+      <div class="me-name">You're online as <strong>${escapeHtml(myName)}</strong></div>
+      <div class="balance-hero">
+        <div class="lbl">Your balance</div>
+        <div class="amt" id="balAmt">GH¢${myBalance.toFixed(2)}</div>
+      </div>
+      <div class="section-lbl">Nearby devices</div>
+      <div class="device-list">${list}</div>
+      <div class="activity">
+        <h3>Activity</h3>
+        ${activityHtml}
+      </div>
+      <div class="disclaimer">Simulated demo — no real bank, card, or money is involved.</div>
+    `;
+    document.querySelectorAll('.device-card').forEach(el => {
+      el.addEventListener('click', () => openSendPanel(el.dataset.id));
+    });
+  }
 
-      setTimeout(() => {
-        receiverMsg.textContent = 'Waiting for payment';
-        receiverMsg.style.color = '';
-      }, 2500);
-    }, 550);
-  });
+  function openSendPanel(id) {
+    targetId = id;
+    const target = nearby.find(d => d.id === id);
+    app.innerHTML = `
+      <div class="brand"><div class="mark">Flash</div></div>
+      <div class="card">
+        <label>Send to ${escapeHtml(target ? target.name : '')}</label>
+        <input type="number" id="amtInput" placeholder="0.00" min="1" step="1">
+        <button class="primary" id="sendGo">Send</button>
+        <button class="ghost" id="cancelSend">Cancel</button>
+      </div>
+    `;
+    document.getElementById('cancelSend').addEventListener('click', () => { view = 'home'; render(); });
+    document.getElementById('sendGo').addEventListener('click', () => {
+      const val = parseFloat(document.getElementById('amtInput').value);
+      if (!val || val <= 0) return;
+      if (val > myBalance) { showToast('Insufficient balance'); return; }
+      pendingAmount = val;
+      sendMoney();
+    });
+  }
+
+  function renderConnecting() {
+    const target = nearby.find(d => d.id === targetId);
+    app.innerHTML = `
+      <div class="brand"><div class="mark">Flash</div></div>
+      <div class="card connecting">
+        <div class="spinner"></div>
+        <div>Connecting to ${escapeHtml(target ? target.name : 'device')}…</div>
+      </div>
+    `;
+  }
+
+  function renderPin() {
+    const target = nearby.find(d => d.id === targetId);
+    const dots = [0,1,2,3].map(i => `<div class="d ${i < pin.length ? 'on' : ''}"></div>`).join('');
+    app.innerHTML = `
+      <div class="brand"><div class="mark">Flash</div></div>
+      <div class="card">
+        <div style="text-align:center; font-size:13px; color:var(--text-dim); margin-bottom:4px;">
+          Confirm GH¢${pendingAmount.toFixed(2)} to ${escapeHtml(target ? target.name : '')}
+        </div>
+        <div class="pin-dots">${dots}</div>
+        <div class="keypad" id="keypad">
+          ${[1,2,3,4,5,6,7,8,9].map(n => `<button data-k="${n}">${n}</button>`).join('')}
+          <button data-k="clear" class="del">Clear</button>
+          <button data-k="0">0</button>
+          <button data-k="del" class="del">⌫</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('keypad').addEventListener('click', e => {
+      const k = e.target.dataset.k;
+      if (!k) return;
+      if (k === 'del') pin = pin.slice(0, -1);
+      else if (k === 'clear') pin = '';
+      else if (pin.length < 4) pin += k;
+      renderPin();
+      if (pin.length === 4) setTimeout(confirmPin, 200);
+    });
+  }
+
+  function renderProcessing() {
+    app.innerHTML = `
+      <div class="brand"><div class="mark">Flash</div></div>
+      <div class="card connecting">
+        <div class="spinner"></div>
+        <div>Sending…</div>
+      </div>
+    `;
+  }
+
+  function renderSuccess() {
+    const target = nearby.find(d => d.id === targetId);
+    app.innerHTML = `
+      <div class="brand"><div class="mark">Flash</div></div>
+      <div class="card success">
+        <div class="check">✓</div>
+        <div style="font-weight:700; font-size:16px;">GH¢${pendingAmount.toFixed(2)} sent</div>
+        <div style="font-size:13px; color:var(--text-dim); margin-top:4px;">to ${escapeHtml(target ? target.name : '')}</div>
+        <button class="primary" id="doneBtn">Done</button>
+      </div>
+    `;
+    document.getElementById('doneBtn').addEventListener('click', () => { view = 'home'; render(); });
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function render() {
+    if (view === 'name-entry') renderNameEntry();
+    else if (view === 'home') renderHome();
+    else if (view === 'connecting') renderConnecting();
+    else if (view === 'pin') renderPin();
+    else if (view === 'processing') renderProcessing();
+    else if (view === 'success') renderSuccess();
+  }
+
+  render();
+})();
 </script>
-
 </body>
 </html>
