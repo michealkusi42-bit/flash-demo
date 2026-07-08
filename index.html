@@ -13,7 +13,6 @@
     --text: #EDEFF3;
     --text-dim: #7C8494;
     --line: #232A38;
-    --red: #FF6B6B;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -30,7 +29,7 @@
 
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 24px; width: 100%; max-width: 380px; }
 
-  input[type=text], input[type=number], input[type=tel] {
+  input[type=text], input[type=number] {
     width: 100%; background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
     font-size: 16px; padding: 13px 14px; border-radius: 12px; margin-top: 8px; margin-bottom: 4px;
   }
@@ -42,7 +41,6 @@
     border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 14px;
     box-shadow: 0 8px 20px -8px rgba(0,229,160,.5);
   }
-  button.primary:disabled { background: var(--panel-2); color: var(--text-dim); box-shadow: none; }
   button.ghost {
     width: 100%; background: transparent; color: var(--text-dim); border: 1px solid var(--line);
     padding: 12px; border-radius: 12px; font-size: 14px; cursor: pointer; margin-top: 10px;
@@ -54,7 +52,6 @@
   .balance-hero .amt.flash { color: var(--mint); }
 
   .me-name { text-align:center; font-size: 13px; color: var(--text-dim); margin-bottom: 18px; }
-
   .section-lbl { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .08em; margin: 20px 0 10px; text-align:left; width:100%; max-width:380px; }
 
   .device-list { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 8px; }
@@ -90,7 +87,6 @@
   .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 260px; margin: 0 auto; }
   .keypad button { background: var(--panel-2); border: 1px solid var(--line); color: var(--text); font-size: 20px;
     padding: 16px 0; border-radius: 14px; cursor: pointer; }
-  .keypad button:active { border-color: var(--mint); }
   .keypad button.del { font-size: 14px; color: var(--text-dim); }
 
   .success { text-align: center; padding: 20px 10px; }
@@ -112,321 +108,331 @@
 <body>
 <div id="app"></div>
 
-<script>
-(function(){
-  const app = document.getElementById('app');
-  const STORAGE_KEY = 'flash-airdrop-state-v1';
-  const STALE_MS = 15000;
-  const HEARTBEAT_MS = 2200;
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, update, push, serverTimestamp, onDisconnect, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-  let myId = null;
-  let myName = '';
-  let myBalance = 100;
-  let seenTx = new Set();
-  let view = 'name-entry';
-  let targetId = null;
-  let pendingAmount = 0;
-  let pin = '';
-  let heartbeatTimer = null;
-  let toastTimer = null;
-  let nearby = [];
-  let myActivity = [];
+// ---- YOUR FIREBASE CONFIG ----
+const firebaseConfig = {
+  apiKey: "AIzaSyBYtBb9emWH9BAJ5IHyWBM6TdrglQT6kjI",
+  authDomain: "flash-demo-79cf3.firebaseapp.com",
+  databaseURL: "https://flash-demo-79cf3-default-rtdb.firebaseio.com",
+  projectId: "flash-demo-79cf3",
+  storageBucket: "flash-demo-79cf3.firebasestorage.app",
+  messagingSenderId: "85617213515",
+  appId: "1:85617213515:web:f16198935ef9e722bd4dce"
+};
 
-  function uid() {
-    return 'd' + Math.random().toString(36).slice(2, 10);
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
+
+const app = document.getElementById('app');
+const STALE_MS = 15000;
+
+let myId = null;
+let myName = '';
+let myBalance = 100;
+let seenTx = new Set();
+let view = 'name-entry';
+let targetId = null;
+let pendingAmount = 0;
+let pin = '';
+let nearby = [];
+let myActivity = [];
+let toastTimer = null;
+
+function uid() {
+  return 'd' + Math.random().toString(36).slice(2, 10);
+}
+
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast'; t.className = 'toast';
+    document.body.appendChild(t);
   }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
 
-  async function safeGet(key) {
-    try {
-      const r = await window.storage.get(key, true);
-      return r ? JSON.parse(r.value) : null;
-    } catch (e) { return null; }
-  }
-  async function safeSet(key, value) {
-    try { await window.storage.set(key, JSON.stringify(value), true); return true; }
-    catch (e) { return false; }
-  }
+function flashBalance() {
+  const el = document.getElementById('balAmt');
+  if (!el) return;
+  el.classList.add('flash');
+  setTimeout(() => el.classList.remove('flash'), 900);
+}
 
-  function showToast(msg) {
-    let t = document.getElementById('toast');
-    if (!t) {
-      t = document.createElement('div');
-      t.id = 'toast'; t.className = 'toast';
-      document.body.appendChild(t);
-    }
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
-  }
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 
-  async function heartbeat() {
-    let state = await safeGet(STORAGE_KEY);
-    if (!state) state = { devices: {}, tx: [] };
-    if (!state.devices) state.devices = {};
-    if (!state.tx) state.tx = [];
+function joinNetwork() {
+  myId = uid();
+  const myRef = ref(db, 'devices/' + myId);
 
-    if (state.devices[myId] && typeof state.devices[myId].balance === 'number') {
-      myBalance = state.devices[myId].balance;
-    }
+  set(myRef, { name: myName, balance: myBalance, lastSeen: Date.now() });
+  onDisconnect(myRef).remove();
 
-    const incoming = state.tx.filter(t => t.to === myId && !seenTx.has(t.id));
-    incoming.forEach(t => {
-      seenTx.add(t.id);
-      showToast('✓ Received GH¢' + t.amount.toFixed(2) + ' from ' + t.fromName);
-      myActivity.unshift({ dir: 'in', name: t.fromName, amount: t.amount, time: t.time });
-      flashBalance();
-    });
+  // heartbeat to keep lastSeen fresh
+  setInterval(() => {
+    update(myRef, { lastSeen: Date.now() });
+  }, 5000);
 
+  // listen to all devices for nearby list + my own balance sync
+  onValue(ref(db, 'devices'), (snap) => {
+    const devices = snap.val() || {};
     const now = Date.now();
-    Object.keys(state.devices).forEach(id => {
-      if (now - state.devices[id].lastSeen > STALE_MS) delete state.devices[id];
-    });
 
-    state.devices[myId] = { name: myName, balance: myBalance, lastSeen: now };
-    await safeSet(STORAGE_KEY, state);
+    if (devices[myId] && typeof devices[myId].balance === 'number') {
+      myBalance = devices[myId].balance;
+    }
 
-    nearby = Object.entries(state.devices)
-      .filter(([id]) => id !== myId)
+    nearby = Object.entries(devices)
+      .filter(([id, d]) => id !== myId && (now - (d.lastSeen || 0)) < STALE_MS)
       .map(([id, d]) => ({ id, name: d.name }))
       .sort((a, b) => a.name.localeCompare(b.name));
 
     if (view === 'home') render();
-  }
+  });
 
-  function startHeartbeat() {
-    heartbeat();
-    heartbeatTimer = setInterval(heartbeat, HEARTBEAT_MS);
-  }
-
-  function flashBalance() {
-    const el = document.getElementById('balAmt');
-    if (!el) return;
-    el.classList.add('flash');
-    setTimeout(() => el.classList.remove('flash'), 900);
-  }
-
-  async function sendMoney() {
-    view = 'connecting';
-    render();
-    await new Promise(r => setTimeout(r, 700));
-    view = 'pin';
-    pin = '';
-    render();
-  }
-
-  async function confirmPin() {
-    view = 'processing';
-    render();
-
-    let state = await safeGet(STORAGE_KEY);
-    if (!state) state = { devices: {}, tx: [] };
-    const other = state.devices[targetId];
-    if (!other) {
-      showToast('That device went offline — try again');
-      view = 'home';
-      render();
-      return;
-    }
-    if (pendingAmount > myBalance) {
-      showToast('Insufficient balance');
-      view = 'home';
-      render();
-      return;
-    }
-
-    myBalance -= pendingAmount;
-    other.balance = (other.balance || 0) + pendingAmount;
-    state.devices[myId] = { name: myName, balance: myBalance, lastSeen: Date.now() };
-    state.devices[targetId] = other;
-
-    const txId = uid();
-    state.tx = [{ id: txId, from: myId, fromName: myName, to: targetId, toName: other.name, amount: pendingAmount, time: Date.now() }, ...(state.tx || [])].slice(0, 60);
-    seenTx.add(txId);
-
-    await safeSet(STORAGE_KEY, state);
-
-    myActivity.unshift({ dir: 'out', name: other.name, amount: pendingAmount, time: Date.now() });
-    view = 'success';
-    render();
-  }
-
-  function renderNameEntry() {
-    app.innerHTML = `
-      <div class="brand">
-        <div class="mark">Flash</div>
-        <div class="tag">tap to send, instantly received</div>
-      </div>
-      <div class="card">
-        <label>Your name</label>
-        <input type="text" id="nameInput" placeholder="e.g. Kwame" maxlength="20" autofocus>
-        <button class="primary" id="joinBtn">Join nearby</button>
-      </div>
-      <div class="disclaimer">
-        Open this same link on another phone at the same time — you'll show up in each other's nearby list, just like AirDrop. No real money moves; this is a simulated demo.
-      </div>
-    `;
-    const input = document.getElementById('nameInput');
-    const btn = document.getElementById('joinBtn');
-    const go = () => {
-      const val = input.value.trim();
-      if (!val) { input.focus(); return; }
-      myName = val;
-      myId = uid();
-      view = 'home';
-      render();
-      startHeartbeat();
-    };
-    btn.addEventListener('click', go);
-    input.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
-  }
-
-  function renderHome() {
-    const list = nearby.length
-      ? nearby.map(d => `
-          <div class="device-card" data-id="${d.id}">
-            <div>
-              <div class="dname">${escapeHtml(d.name)}</div>
-              <div class="dsub">nearby · tap to send</div>
-            </div>
-            <div class="pulse-icon"></div>
-          </div>
-        `).join('')
-      : `<div class="empty-note">Searching for nearby devices…<br>Open this same link on another phone to see it appear here.</div>`;
-
-    const activityHtml = myActivity.length
-      ? myActivity.slice(0, 8).map(a => `
-          <div class="arow">
-            <span class="t">${a.dir === 'in' ? a.name + ' → you' : 'you → ' + a.name}</span>
-            <span class="a ${a.dir}">${a.dir === 'in' ? '+' : '−'}GH¢${a.amount.toFixed(2)}</span>
-          </div>
-        `).join('')
-      : `<div class="empty-note" style="padding:10px 0;">No transfers yet</div>`;
-
-    app.innerHTML = `
-      <div class="brand">
-        <div class="mark">Flash</div>
-        <div class="tag">tap to send, instantly received</div>
-      </div>
-      <div class="me-name">You're online as <strong>${escapeHtml(myName)}</strong></div>
-      <div class="balance-hero">
-        <div class="lbl">Your balance</div>
-        <div class="amt" id="balAmt">GH¢${myBalance.toFixed(2)}</div>
-      </div>
-      <div class="section-lbl">Nearby devices</div>
-      <div class="device-list">${list}</div>
-      <div class="activity">
-        <h3>Activity</h3>
-        ${activityHtml}
-      </div>
-      <div class="disclaimer">Simulated demo — no real bank, card, or money is involved.</div>
-    `;
-    document.querySelectorAll('.device-card').forEach(el => {
-      el.addEventListener('click', () => openSendPanel(el.dataset.id));
+  // listen for transactions addressed to me
+  onValue(ref(db, 'tx'), (snap) => {
+    const txs = snap.val() || {};
+    Object.entries(txs).forEach(([txId, t]) => {
+      if (t.to === myId && !seenTx.has(txId)) {
+        seenTx.add(txId);
+        showToast('✓ Received GH¢' + Number(t.amount).toFixed(2) + ' from ' + t.fromName);
+        myActivity.unshift({ dir: 'in', name: t.fromName, amount: t.amount, time: t.time });
+        flashBalance();
+        if (view === 'home') render();
+      }
     });
-  }
+  });
 
-  function openSendPanel(id) {
-    targetId = id;
-    const target = nearby.find(d => d.id === id);
-    app.innerHTML = `
-      <div class="brand"><div class="mark">Flash</div></div>
-      <div class="card">
-        <label>Send to ${escapeHtml(target ? target.name : '')}</label>
-        <input type="number" id="amtInput" placeholder="0.00" min="1" step="1">
-        <button class="primary" id="sendGo">Send</button>
-        <button class="ghost" id="cancelSend">Cancel</button>
-      </div>
-    `;
-    document.getElementById('cancelSend').addEventListener('click', () => { view = 'home'; render(); });
-    document.getElementById('sendGo').addEventListener('click', () => {
-      const val = parseFloat(document.getElementById('amtInput').value);
-      if (!val || val <= 0) return;
-      if (val > myBalance) { showToast('Insufficient balance'); return; }
-      pendingAmount = val;
-      sendMoney();
-    });
-  }
-
-  function renderConnecting() {
-    const target = nearby.find(d => d.id === targetId);
-    app.innerHTML = `
-      <div class="brand"><div class="mark">Flash</div></div>
-      <div class="card connecting">
-        <div class="spinner"></div>
-        <div>Connecting to ${escapeHtml(target ? target.name : 'device')}…</div>
-      </div>
-    `;
-  }
-
-  function renderPin() {
-    const target = nearby.find(d => d.id === targetId);
-    const dots = [0,1,2,3].map(i => `<div class="d ${i < pin.length ? 'on' : ''}"></div>`).join('');
-    app.innerHTML = `
-      <div class="brand"><div class="mark">Flash</div></div>
-      <div class="card">
-        <div style="text-align:center; font-size:13px; color:var(--text-dim); margin-bottom:4px;">
-          Confirm GH¢${pendingAmount.toFixed(2)} to ${escapeHtml(target ? target.name : '')}
-        </div>
-        <div class="pin-dots">${dots}</div>
-        <div class="keypad" id="keypad">
-          ${[1,2,3,4,5,6,7,8,9].map(n => `<button data-k="${n}">${n}</button>`).join('')}
-          <button data-k="clear" class="del">Clear</button>
-          <button data-k="0">0</button>
-          <button data-k="del" class="del">⌫</button>
-        </div>
-      </div>
-    `;
-    document.getElementById('keypad').addEventListener('click', e => {
-      const k = e.target.dataset.k;
-      if (!k) return;
-      if (k === 'del') pin = pin.slice(0, -1);
-      else if (k === 'clear') pin = '';
-      else if (pin.length < 4) pin += k;
-      renderPin();
-      if (pin.length === 4) setTimeout(confirmPin, 200);
-    });
-  }
-
-  function renderProcessing() {
-    app.innerHTML = `
-      <div class="brand"><div class="mark">Flash</div></div>
-      <div class="card connecting">
-        <div class="spinner"></div>
-        <div>Sending…</div>
-      </div>
-    `;
-  }
-
-  function renderSuccess() {
-    const target = nearby.find(d => d.id === targetId);
-    app.innerHTML = `
-      <div class="brand"><div class="mark">Flash</div></div>
-      <div class="card success">
-        <div class="check">✓</div>
-        <div style="font-weight:700; font-size:16px;">GH¢${pendingAmount.toFixed(2)} sent</div>
-        <div style="font-size:13px; color:var(--text-dim); margin-top:4px;">to ${escapeHtml(target ? target.name : '')}</div>
-        <button class="primary" id="doneBtn">Done</button>
-      </div>
-    `;
-    document.getElementById('doneBtn').addEventListener('click', () => { view = 'home'; render(); });
-  }
-
-  function escapeHtml(s) {
-    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  function render() {
-    if (view === 'name-entry') renderNameEntry();
-    else if (view === 'home') renderHome();
-    else if (view === 'connecting') renderConnecting();
-    else if (view === 'pin') renderPin();
-    else if (view === 'processing') renderProcessing();
-    else if (view === 'success') renderSuccess();
-  }
-
+  view = 'home';
   render();
-})();
+}
+
+async function sendMoney() {
+  view = 'connecting';
+  render();
+  await new Promise(r => setTimeout(r, 700));
+  view = 'pin';
+  pin = '';
+  render();
+}
+
+async function confirmPin() {
+  view = 'processing';
+  render();
+
+  const devicesSnap = await get(ref(db, 'devices'));
+  const devices = devicesSnap.val() || {};
+  const other = devices[targetId];
+
+  if (!other) {
+    showToast('That device went offline — try again');
+    view = 'home';
+    render();
+    return;
+  }
+  if (pendingAmount > myBalance) {
+    showToast('Insufficient balance');
+    view = 'home';
+    render();
+    return;
+  }
+
+  const newMyBalance = myBalance - pendingAmount;
+  const newOtherBalance = (other.balance || 0) + pendingAmount;
+
+  await update(ref(db, 'devices/' + myId), { balance: newMyBalance, lastSeen: Date.now() });
+  await update(ref(db, 'devices/' + targetId), { balance: newOtherBalance });
+
+  const txRef = push(ref(db, 'tx'));
+  await set(txRef, {
+    from: myId, fromName: myName,
+    to: targetId, toName: other.name,
+    amount: pendingAmount, time: Date.now()
+  });
+
+  myBalance = newMyBalance;
+  myActivity.unshift({ dir: 'out', name: other.name, amount: pendingAmount, time: Date.now() });
+  view = 'success';
+  render();
+}
+
+function renderNameEntry() {
+  app.innerHTML = `
+    <div class="brand">
+      <div class="mark">Flash</div>
+      <div class="tag">tap to send, instantly received</div>
+    </div>
+    <div class="card">
+      <label>Your name</label>
+      <input type="text" id="nameInput" placeholder="e.g. Kwame" maxlength="20" autofocus>
+      <button class="primary" id="joinBtn">Join nearby</button>
+    </div>
+    <div class="disclaimer">
+      Open this same link on another phone at the same time — you'll show up in each other's nearby list automatically. No real money moves; this is a simulated demo.
+    </div>
+  `;
+  const input = document.getElementById('nameInput');
+  const btn = document.getElementById('joinBtn');
+  const go = () => {
+    const val = input.value.trim();
+    if (!val) { input.focus(); return; }
+    myName = val;
+    joinNetwork();
+  };
+  btn.addEventListener('click', go);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+}
+
+function renderHome() {
+  const list = nearby.length
+    ? nearby.map(d => `
+        <div class="device-card" data-id="${d.id}">
+          <div>
+            <div class="dname">${escapeHtml(d.name)}</div>
+            <div class="dsub">nearby · tap to send</div>
+          </div>
+          <div class="pulse-icon"></div>
+        </div>
+      `).join('')
+    : `<div class="empty-note">Searching for nearby devices…<br>Open this same link on another phone to see it appear here.</div>`;
+
+  const activityHtml = myActivity.length
+    ? myActivity.slice(0, 8).map(a => `
+        <div class="arow">
+          <span class="t">${a.dir === 'in' ? a.name + ' → you' : 'you → ' + a.name}</span>
+          <span class="a ${a.dir}">${a.dir === 'in' ? '+' : '−'}GH¢${Number(a.amount).toFixed(2)}</span>
+        </div>
+      `).join('')
+    : `<div class="empty-note" style="padding:10px 0;">No transfers yet</div>`;
+
+  app.innerHTML = `
+    <div class="brand">
+      <div class="mark">Flash</div>
+      <div class="tag">tap to send, instantly received</div>
+    </div>
+    <div class="me-name">You're online as <strong>${escapeHtml(myName)}</strong></div>
+    <div class="balance-hero">
+      <div class="lbl">Your balance</div>
+      <div class="amt" id="balAmt">GH¢${myBalance.toFixed(2)}</div>
+    </div>
+    <div class="section-lbl">Nearby devices</div>
+    <div class="device-list">${list}</div>
+    <div class="activity">
+      <h3>Activity</h3>
+      ${activityHtml}
+    </div>
+    <div class="disclaimer">Simulated demo — no real bank, card, or money is involved.</div>
+  `;
+  document.querySelectorAll('.device-card').forEach(el => {
+    el.addEventListener('click', () => openSendPanel(el.dataset.id));
+  });
+}
+
+function openSendPanel(id) {
+  targetId = id;
+  const target = nearby.find(d => d.id === id);
+  app.innerHTML = `
+    <div class="brand"><div class="mark">Flash</div></div>
+    <div class="card">
+      <label>Send to ${escapeHtml(target ? target.name : '')}</label>
+      <input type="number" id="amtInput" placeholder="0.00" min="1" step="1">
+      <button class="primary" id="sendGo">Send</button>
+      <button class="ghost" id="cancelSend">Cancel</button>
+    </div>
+  `;
+  document.getElementById('cancelSend').addEventListener('click', () => { view = 'home'; render(); });
+  document.getElementById('sendGo').addEventListener('click', () => {
+    const val = parseFloat(document.getElementById('amtInput').value);
+    if (!val || val <= 0) return;
+    if (val > myBalance) { showToast('Insufficient balance'); return; }
+    pendingAmount = val;
+    sendMoney();
+  });
+}
+
+function renderConnecting() {
+  const target = nearby.find(d => d.id === targetId);
+  app.innerHTML = `
+    <div class="brand"><div class="mark">Flash</div></div>
+    <div class="card connecting">
+      <div class="spinner"></div>
+      <div>Connecting to ${escapeHtml(target ? target.name : 'device')}…</div>
+    </div>
+  `;
+}
+
+function renderPin() {
+  const target = nearby.find(d => d.id === targetId);
+  const dots = [0,1,2,3].map(i => `<div class="d ${i < pin.length ? 'on' : ''}"></div>`).join('');
+  app.innerHTML = `
+    <div class="brand"><div class="mark">Flash</div></div>
+    <div class="card">
+      <div style="text-align:center; font-size:13px; color:var(--text-dim); margin-bottom:4px;">
+        Confirm GH¢${pendingAmount.toFixed(2)} to ${escapeHtml(target ? target.name : '')}
+      </div>
+      <div class="pin-dots">${dots}</div>
+      <div class="keypad" id="keypad">
+        ${[1,2,3,4,5,6,7,8,9].map(n => `<button data-k="${n}">${n}</button>`).join('')}
+        <button data-k="clear" class="del">Clear</button>
+        <button data-k="0">0</button>
+        <button data-k="del" class="del">⌫</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('keypad').addEventListener('click', e => {
+    const k = e.target.dataset.k;
+    if (!k) return;
+    if (k === 'del') pin = pin.slice(0, -1);
+    else if (k === 'clear') pin = '';
+    else if (pin.length < 4) pin += k;
+    renderPin();
+    if (pin.length === 4) setTimeout(confirmPin, 200);
+  });
+}
+
+function renderProcessing() {
+  app.innerHTML = `
+    <div class="brand"><div class="mark">Flash</div></div>
+    <div class="card connecting">
+      <div class="spinner"></div>
+      <div>Sending…</div>
+    </div>
+  `;
+}
+
+function renderSuccess() {
+  const target = nearby.find(d => d.id === targetId);
+  app.innerHTML = `
+    <div class="brand"><div class="mark">Flash</div></div>
+    <div class="card success">
+      <div class="check">✓</div>
+      <div style="font-weight:700; font-size:16px;">GH¢${pendingAmount.toFixed(2)} sent</div>
+      <div style="font-size:13px; color:var(--text-dim); margin-top:4px;">to ${escapeHtml(target ? target.name : '')}</div>
+      <button class="primary" id="doneBtn">Done</button>
+    </div>
+  `;
+  document.getElementById('doneBtn').addEventListener('click', () => { view = 'home'; render(); });
+}
+
+function render() {
+  if (view === 'name-entry') renderNameEntry();
+  else if (view === 'home') renderHome();
+  else if (view === 'connecting') renderConnecting();
+  else if (view === 'pin') renderPin();
+  else if (view === 'processing') renderProcessing();
+  else if (view === 'success') renderSuccess();
+}
+
+render();
 </script>
 </body>
 </html>
